@@ -1,15 +1,41 @@
+"""
+Projekt Prostej Sieci Neuronowej wykonanej do rozpoznawania danych liczb
+napisanych odręcznie (dane MNIST).
+Sieć wykonana samodzielnie bez użycia zewnętrznych bibliotek i frameworków.
+Wykonał: Daniel Madejski
+Biblioteki: Numpy
+"""
+
 import numpy as np
 
 class Simple_Neural_Network():
-
-    def __init__(self, layer_dims = 784, learning_rate = 0.00001, layers_num = 3):
+    """
+    Klasa reprezentująca sieć neuronową.
+    Zawiera metody inicjalizacji, pobierania danych, zbierania warstw, trenowania i predykowania.
+    """
+    def __init__(self, layer_dims = 784, learning_rate = 0.00001, epoch=25):
+        """
+        Metoda inicjalizacyjna.
+        Inicjalizuje klasę Simple_Neural_Network.
+        Przyjmuje zmienne:
+            -layer_dims - wielkość warstwy wiejściowej (784 ze względu na dane MNIST)
+            -leatning_rate - krok uczenia (0.00001 ponieważ model ma tendencję niestabilności przy większej wartości)
+            -layers - lista przygotowana do przechowywania warstw sieci
+            -epoch - liczba iteracji przez sieć
+        """
         self.layer_dims = layer_dims
         self.learning_rate = learning_rate
-        self.layers_num = layers_num
         self.layers = []
+        self.epoch = epoch
 
     def train_data_download(self):
-        mnist_data = np.loadtxt("C:\\Users\\danie\\Desktop\\MNIST_CSV\\mnist_train.csv", delimiter=",")
+        """
+        Metoda pobierająca i normalizująca dane.
+        Dzieli pobrane dane Mnist na macierz 60000 próbek o ilości pikseli 784 (28 x 28)
+        oraz wektor etykiet, które następnie zmieniane są na macierz One Hot.
+        Dane w macierzy x są normalizowane dzieląc przez 255 co jest maksymalną wartością.
+        """
+        mnist_data = np.loadtxt("mnist_train.csv", delimiter=",")
 
         self.x_train = mnist_data[:,1:]
         self.y_train = mnist_data[:,0]
@@ -22,15 +48,56 @@ class Simple_Neural_Network():
                 if j == self.y_train[i]:
                     self.y_train_one_hot[i,j] = 1
 
-    def Layers_collect(self,layer):
+    def layers_collect(self,layer):
+        """Metoda dodająca warstwy do listy 'self.layers'."""
         self.layers.append(layer)
 
-
     def train(self):
-        layers = []
+        for i in range(self.epoch):
+            for l in range(len(self.layers)):
+                if l == 0:
+                    self.layers[l].forward_propagation(self.x_train)
+                else:
+                    self.layers[l].forward_propagation(self.layers[l-1].new_x)
+            for l2 in range(len(self.layers)-1, -1, -1):
+                if l2 == len(self.layers)-1:
+                    self.layers[l2].Categorical_Cross_Entropy(self.y_train_one_hot)
+                    self.layers[l2].backward_propagation(last_layer_flag=True)
+                else:
+                    self.layers[l2].backward_propagation(grad=self.layers[l2+1].dZ, weights=self.layers[l2+1].w)
+            for l3 in range(len(self.layers) - 1, -1, -1):
+                self.layers[l3].weights_update(self.learning_rate)
+
 
     def predict(self):
-        pass
+        test_data = np.loadtxt("mnist_test.csv", delimiter=",")
+        x_predict = test_data[:, 1:]
+        y_predict = test_data[:, 0]
+
+        y_predict_one_hot = np.zeros((y_predict.shape[0], 10))
+        for i in range(y_predict_one_hot.shape[0]):
+            for j in range(y_predict_one_hot.shape[1]):
+                if j == y_predict[i]:
+                    y_predict_one_hot[i,j] = 1
+
+        x_predict = x_predict / 255
+        for l in range(len(self.layers)):
+            if l == 0:
+                self.layers[l].forward_propagation(x_predict)
+            else:
+                self.layers[l].forward_propagation(self.layers[l - 1].new_x)
+
+        acc = 0
+        for i in range(y_predict_one_hot.shape[0]):
+            if np.argmax(self.layers[-1].new_x[i]) == np.argmax(y_predict_one_hot[i]):
+                acc += 1
+
+        acc = acc/y_predict_one_hot.shape[0]
+        print(f"Accuracy on test data frame = {acc}")
+
+
+
+
 
 class Layer():
 
@@ -103,7 +170,7 @@ class Layer():
         self.dw = self.x.T @ self.dZ
         self.db = np.sum(self.dZ,0)
 
-    def weigts_update(self, learning_rate):
+    def weights_update(self, learning_rate):
         self.w = self.w - (learning_rate * self.dw)
         self.b = self.b - (learning_rate * self.db)
 
@@ -119,34 +186,8 @@ S.train_data_download()
 F_L = Layer('relu')
 S_L = Layer('relu', F_L.output, 64)
 O_L = Layer('softmax', S_L.output, 10)
-F_L.forward_propagation(S.x_train)
-S_L.forward_propagation(F_L.new_x)
-O_L.forward_propagation(S_L.new_x)
-O_L.Categorical_Cross_Entropy(S.y_train_one_hot)
-O_L.backward_propagation(last_layer_flag=True)
-S_L.backward_propagation(grad=O_L.dZ, weights=O_L.w)
-F_L.backward_propagation(grad=S_L.dZ, weights=S_L.w)
-O_L.weigts_update(S.learning_rate)
-S_L.weigts_update(S.learning_rate)
-F_L.weigts_update(S.learning_rate)
-F_L.forward_propagation(S.x_train)
-S_L.forward_propagation(F_L.new_x)
-O_L.forward_propagation(S_L.new_x)
-O_L.Categorical_Cross_Entropy(S.y_train_one_hot)
-O_L.backward_propagation(last_layer_flag=True)
-S_L.backward_propagation(grad=O_L.dZ, weights=O_L.w)
-F_L.backward_propagation(grad=S_L.dZ, weights=S_L.w)
-O_L.weigts_update(S.learning_rate)
-S_L.weigts_update(S.learning_rate)
-F_L.weigts_update(S.learning_rate)
-for i in range(50):
-    F_L.forward_propagation(S.x_train)
-    S_L.forward_propagation(F_L.new_x)
-    O_L.forward_propagation(S_L.new_x)
-    O_L.Categorical_Cross_Entropy(S.y_train_one_hot)
-    O_L.backward_propagation(last_layer_flag=True)
-    S_L.backward_propagation(grad=O_L.dZ, weights=O_L.w)
-    F_L.backward_propagation(grad=S_L.dZ, weights=S_L.w)
-    O_L.weigts_update(S.learning_rate)
-    S_L.weigts_update(S.learning_rate)
-    F_L.weigts_update(S.learning_rate)
+S.layers_collect(F_L)
+S.layers_collect(S_L)
+S.layers_collect(O_L)
+S.train()
+S.predict()
