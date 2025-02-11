@@ -21,6 +21,8 @@ To run this project, install it locally using pip:
 $ cd ../Simple_Neural_Network
 $ pip install numpy
 ```
+Download the data from the link below:
+https://drive.google.com/file/d/1eEKzfmEu6WKdRlohBQiqi3PhW_uIVJVP/view
 
 ## Room for Improvement
 
