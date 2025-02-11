@@ -1,0 +1,30 @@
+# Simple Neural Network
+
+## Table of Contents
+* [General Info](#general-information)
+* [Technologies Used](#technologies-used)
+* [Setup](#setup)
+* [Room for Improvement](#room-for-improvement)
+
+
+## General Information
+- A simple neural network whose task is to determine which handwritten number is present in the given image.
+
+## Technologies Used
+- Python 3.12
+- Numpy 2.2.2
+
+## Setup
+To run this project, install it locally using pip:
+
+```
+$ cd ../Simple_Neural_Network
+$ pip install numpy
+```
+
+## Room for Improvement
+
+To do
+- Optimize the code
+- Add new activation functions
+- Better display of result

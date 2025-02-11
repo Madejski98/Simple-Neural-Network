@@ -13,7 +13,7 @@ class Simple_Neural_Network():
     Klasa reprezentująca sieć neuronową.
     Zawiera metody inicjalizacji, pobierania danych, zbierania warstw, trenowania i predykowania.
     """
-    def __init__(self, layer_dims = 784, learning_rate = 0.00001, epoch=25):
+    def __init__(self, layer_dims = 784, learning_rate = 0.00001, epoch=50):
         """
         Metoda inicjalizacyjna.
         Inicjalizuje klasę Simple_Neural_Network.
@@ -62,6 +62,7 @@ class Simple_Neural_Network():
             3. Aktualizująca wagi i biasy.
         """
         for i in range(self.epoch):
+            print(f"[EPOCH {i+1}/{self.epoch}] ", end='')
             for l in range(len(self.layers)):
                 if l == 0:
                     self.layers[l].forward_propagation(self.x_train)
@@ -212,7 +213,7 @@ class Layer():
             sample_sum = sample_sum * (-1)
             self.loss = self.loss + sample_sum
         self.loss = self.loss/self.new_x.shape[0]
-        print(f"Koszt: {self.loss}")
+        print(f"COST: {self.loss}")
 
     def backward_propagation(self, last_layer_flag=False, grad=None, weights = None):
         """
