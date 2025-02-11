@@ -30,7 +30,7 @@ class Simple_Neural_Network():
 
     def train_data_download(self):
         """
-        Metoda pobierająca i normalizująca dane.
+        Metoda pobierająca i normalizująca dane które w dokumencie csv już są flatennowane.
         Dzieli pobrane dane Mnist na macierz 60000 próbek o ilości pikseli 784 (28 x 28)
         oraz wektor etykiet, które następnie zmieniane są na macierz One Hot.
         Dane w macierzy x są normalizowane dzieląc przez 255 co jest maksymalną wartością.
@@ -53,6 +53,14 @@ class Simple_Neural_Network():
         self.layers.append(layer)
 
     def train(self):
+        """
+        Metoda trenująca sieć neuronową.
+        Pętla wykonująca się podaną przez użytkownika ilość razy. (self.epoch)
+        Posiada trzy pętle wewnętrzne
+            1. Wykonująca propagację w przód.
+            2. Przeprowadzająca propagację w tył.
+            3. Aktualizująca wagi i biasy.
+        """
         for i in range(self.epoch):
             for l in range(len(self.layers)):
                 if l == 0:
@@ -70,6 +78,12 @@ class Simple_Neural_Network():
 
 
     def predict(self):
+        """
+        Metoda predykująca wykonywana na zbiorze testowym.
+        Przygotowuje dane testowe dla sieci, a następnie
+        przeprowadza propagację w przód na zbiorze testowym.
+        Porównuje wyniki z etykietami i podaje poziom dokładności.
+        """
         test_data = np.loadtxt("mnist_test.csv", delimiter=",")
         x_predict = test_data[:, 1:]
         y_predict = test_data[:, 0]
@@ -100,8 +114,32 @@ class Simple_Neural_Network():
 
 
 class Layer():
+    """
+    Klasa reprezentująca warstwe sieci neuronowej.
+    Zawiera nasepujące metody:
+        - __init__ - inicjalizacja klasy,
+        - initialize_parameters - inicjalizacja wag i biasów,
+        - forward_propagation - propagacja w przód,
+        - ReLU - wykonanie funkcji ReLU,
+        - Softmax - wykonanie funkcji Softmax,
+        - Categorical_Cross_Entropy - entropia krzyżowa,
+        - backward_propagation - propagacja w tył,
+        - CCE_gradient - gradient funkcji kosztu,
+        - activation_func_gradient - gradient funkcji aktywacji,
+        - weights_and_bias_gradient - gradient wag i biasów,
+        - weights_update - aktualizacja wag i biasów.
+    """
 
     def __init__(self,active_func, input=784, output=128):
+        """
+        Metoda inicjalizacyjna.
+        Inicjalizuje klasę Layer
+        oraz uruchamia metodę initialize_parameters.
+        Przyjmuje zmienne:
+            - active_func - nazwa funkcji aktywacji,
+            - input - wielkość wejścia warstwy
+            - output - wielkość wyjścia warstwy
+        """
         self.input = input
         self.output = output
 
@@ -110,12 +148,20 @@ class Layer():
         self.initialize_parameters()
 
     def initialize_parameters(self):
-
+        """
+        Metoda inicjalizująca wag metodą He.
+        """
         he = np.sqrt(2/self.input)
         self.w = np.random.randn(self.input, self.output) * he
         self.b = np.zeros(self.output)
 
     def forward_propagation(self, x):
+        """
+        Metoda wykonująca propagację w przód.
+        Przyjmuje parametr x jako wejście warstwy.
+        Wylicza wyjście warstwy które podawane jest na odpowiednią
+        funkcję aktywacji przed przekazaniem na następną warstwę..
+        """
         self.x = x
         self.y = self.x @ self.w + self.b
         if self.active_func == 'relu':
@@ -124,9 +170,25 @@ class Layer():
             self.new_x = self.Softmax(self.y)
 
     def ReLU(self, y):
+        """
+        Metoda wykonująca funkcję aktywacji ReLU.
+        Przyjmuje zmienną y, która reprezenuje wyjście podane na
+        funkcję aktywacji.
+        Daje 0 dla wartości mniejszych niż 0 i a przekazuje
+        wartości w niezmienionej formie które są większe od 0.
+        """
         return np.maximum(0,y)
 
     def Softmax(self, y):
+        """
+        Metoda wykonująca funkcjęaktywacji Softmax.
+        Przyjmuje zmienną y, która reprezenuje wyjście podane na
+        funkcję aktywacji.
+        Wyjście aktywowane tą funkcją daje wartości
+        sumujące się do 1 co daje prawdopodobieństwo,
+        że rzecz podana na wejście sieci
+        odpowiada rzeczywistej konkretnej klasie.
+        """
         new_x = np.zeros((y.shape))
         for i in range(new_x.shape[0]):
             sum_exp_i = np.sum(np.exp(y[i]))
@@ -135,6 +197,12 @@ class Layer():
         return new_x
 
     def Categorical_Cross_Entropy(self, y_train):
+        """
+        Metoda wykonująca entropię krzyżową.
+        Jest to funkcja kosztu aktywacji Softmax,
+        rozumiana jako różnica między rozkładem prawdopodobieństwa
+        czyli wyjściem sieci, a rzeczywistymi etykietami.
+        """
         self.loss = 0
         self.y_train = y_train
         for i in range(self.new_x.shape[0]):
@@ -147,6 +215,16 @@ class Layer():
         print(f"Koszt: {self.loss}")
 
     def backward_propagation(self, last_layer_flag=False, grad=None, weights = None):
+        """
+        Metoda wykonująca porpagację w tył.
+        Przyjmuje zmienne:
+            - last_layer_flag - flaga ostatniej klasy (domyślnie False),
+            - grad - gradient poprzedniej warstwy (domyślnie None),
+            - weights - wagi poprzedniej warstwy (domyślnie None)
+        Wywołuje funkcje wyliczania gradientu funkcji kosztu dla ostatniej warstwy,
+        metodę obliczającą gradient funkcji aktywacji dla pozostałych warstw
+        oraz metodę wyliczającą gradient wag i biasów dla każdej z warstw.
+        """
         if last_layer_flag:
             self.CCE_gradient()
             self.weights_and_bias_gradient()
@@ -155,9 +233,16 @@ class Layer():
             self.weights_and_bias_gradient()
 
     def CCE_gradient(self):
+        """
+        Metoda licząca gradient funkcji kosztu.
+        """
         self.dZ = self.new_x - self.y_train
 
     def activation_func_gradients(self, grad, weights):
+        """
+        Metoda wyliczająca gradient funkcji aktwyacji.
+        Przyjmuje zmienne grad i weights jako gradient i wagi poprzedniej warstwy.
+        """
         self.dA = grad @ weights.T
 
         self.dZ = np.zeros(self.dA.shape)
@@ -167,10 +252,17 @@ class Layer():
                     self.dZ[i,j] = self.dA[i,j] * 1
 
     def weights_and_bias_gradient(self):
+        """
+        Metoda licząca gradient wag i biasów.
+        """
         self.dw = self.x.T @ self.dZ
         self.db = np.sum(self.dZ,0)
 
     def weights_update(self, learning_rate):
+        """
+        Metoda aktualizująca wagi i biasy.
+        Przyjmuje zmienną learning_rate (krok uczenia).
+        """
         self.w = self.w - (learning_rate * self.dw)
         self.b = self.b - (learning_rate * self.db)
 
