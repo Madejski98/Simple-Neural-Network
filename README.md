@@ -3,6 +3,7 @@
 ## Table of Contents
 * [General Info](#general-information)
 * [Technologies Used](#technologies-used)
+* [Screenshots](#screenshots)
 * [Setup](#setup)
 * [Room for Improvement](#room-for-improvement)
 
@@ -13,6 +14,9 @@
 ## Technologies Used
 - Python 3.12
 - Numpy 2.2.2
+
+## Screenshots
+![screenshot](./Prediction_image.jpg)
 
 ## Setup
 To run this project, install it locally using pip:

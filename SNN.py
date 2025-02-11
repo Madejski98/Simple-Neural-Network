@@ -7,6 +7,7 @@ Biblioteki: Numpy
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Simple_Neural_Network():
     """
@@ -109,6 +110,34 @@ class Simple_Neural_Network():
 
         acc = acc/y_predict_one_hot.shape[0]
         print(f"Accuracy on test data frame = {acc}")
+        self.show_example(self.layers[-1].new_x,x_predict)
+
+    def show_example(self, y, x):
+        """
+        Metoda przedstawiająca trzy przykładowe obrazy
+        z przewidywaniem określonym przez sieć.
+        Przyjmuje y jako wyjście sieci neuronowej
+        oraz x które jest wejściem sieci neuronowej.
+        """
+        y_predict = y
+        random_index = np.random.choice(y_predict.shape[0], 3, replace=False)
+        x_test = x
+        images = x_test[random_index]
+        predictions = []
+        for i in range(3):
+            predictions.append(np.argmax(y_predict[random_index[i]]))
+
+        images = images.reshape(3 ,28, 28)
+
+        plt.figure(figsize=(10, 3))
+
+        for i in range(3):
+            plt.subplot(1, 3, i + 1)
+            plt.imshow(images[i], cmap='gray')
+            plt.title(f'Prediction: {predictions[i]}')
+            plt.axis('off')
+
+        plt.show()
 
 
 
